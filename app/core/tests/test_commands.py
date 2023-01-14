@@ -23,13 +23,13 @@ class CommandTests(SimpleTestCase):
         patched_check.assert_called_once_with(databases=['default'])
 
     @patch('time.sleep')
-    def test_wait_for_db_delay(self,patched_sleep,pathced_check):
+    def test_wait_for_db_delay(self, patched_sleep, pathced_check):
         """test waiting for dabatase when getting operational Error"""
         pathced_check.side_effect = [Psycopg2Error] * 2 + \
             [OperationalError] * 3 + [True]
-        
+
         call_command('wait_for_db')
 
-        self.assertEqual(pathced_check.call_count,6)
+        self.assertEqual(pathced_check.call_count, 6)
 
         pathced_check.assert_called_with(databases=['default'])
