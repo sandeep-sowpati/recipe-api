@@ -13,6 +13,8 @@ CREATE_USER_URL = reverse('user:create')
 
 TOKEN_URL = reverse('user:token')
 
+ME_URL = reverse('user:about')
+
 
 def create_user(**params):
     """Create and return a new user"""
@@ -116,3 +118,50 @@ class publicUserApiTests(TestCase):
 
         self.assertNotIn('token', res)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_profile_unauthorized(self):
+        """Test to retrieve profile if not authorized"""
+
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class privateUserApiTests(TestCase):
+    """Test API that require authentication."""
+
+    def setUp(self):
+        self.user = create_user(
+            email='test@gmail.com',
+            password='pass123',
+            name='Test User',
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test to check if we are able to retrieve a profile successfully. """
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.data, {
+            'email': self.user.email,
+            'name': self.user.name,
+        })
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_post_me_not_allowed(self):
+        """Test POST is not allowed for the end point."""
+        res = self.client.post(ME_URL, {})
+
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating user profile for the authenticated user"""
+        payload = {'name': 'updated_name', 'password': 'newpassword'}
+
+        res = self.client.patch(ME_URL, payload)
+
+        self.user.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
