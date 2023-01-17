@@ -1,17 +1,17 @@
 """
 URL's for the recipe API
 """
-from django.urls import path
+from django.urls import path, include
+
+from rest_framework.routers import DefaultRouter
 
 from recipe import views
 
+router = DefaultRouter()
+router.register(r'recipes', views.RetrieveRecipeView)
 
 app_name = 'recipe'
 
 urlpatterns = [
-    path(
-        'recipelist/',
-        views.RetrieveRecipeView.as_view({'get': 'list'}),
-        name='recipelist'
-    ),
+    path('', include(router.urls)),
 ]
