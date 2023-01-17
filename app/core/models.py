@@ -59,6 +59,3 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
-
-    # def create(self,validated_data):
-    #     """creating a recipe"""
